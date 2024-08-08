@@ -4,6 +4,8 @@ const searchElement = document.querySelector('.search-element')
 const selectCard = document.querySelector('.select-repos')
 const searchResult = document.querySelector('.search-result')
 
+
+
 const debounce = (fn, ms) => {
   let timeout;
   return function () {
@@ -18,10 +20,16 @@ const debounce = (fn, ms) => {
 const addCard = (item) => {
   let element = document.createElement('div');
   element.append(selectCard.content.cloneNode(true));
-  element.querySelector('.card-name').textContent = `Name: ${item.name}`
-  element.querySelector('.card-owner').textContent = `Owner: ${item.owner.login}`
-  element.querySelector('.card-stars').textContent = `Stars: ${item.stargazers_count}`
-  element.querySelector('.card-button-delete').addEventListener('click', (e) => {
+
+  const cardName = element.querySelector('.card-name');
+  const cardOwner = element.querySelector('.card-owner');
+  const cardStars = element.querySelector('.card-stars');
+  const cardButtonDelete = element.querySelector('.card-button-delete');
+
+  cardName.textContent = `Name: ${item.name}`
+  cardOwner.textContent = `Owner: ${item.owner.login}`
+  cardStars.textContent = `Stars: ${item.stargazers_count}`
+  cardButtonDelete.addEventListener('click', (e) => {
     e.target.parentNode.remove()
   })
   searchResult.append(element)
@@ -31,7 +39,7 @@ const addCard = (item) => {
 }
 
 const repositories = async (req) => {
-  return await fetch(`https://api.github.com/search/repositories?q=${req}`, {
+  return await fetch(`https://api.github.com/search/repositories?q=${req}&per_page=5`, {
     headers: {
       'X-GitHub-Api-Version': '2022-11-28',
     }
@@ -42,19 +50,23 @@ const repositories = async (req) => {
       
       response.json().then(repository => {
         searchElement.textContent = '';
-        const items = repository.items.slice(0, 5);
+        const items = repository.items;
 
           if (items.length === 0) {
             searchElement.textContent = 'Ничего не найдено'
           
           } else {
+            const arrFoundElement = [];
             items.forEach(item => {
               const foundElement = document.createElement('p')
               foundElement.className = 'found'
               foundElement.textContent = `${item.name}`
               foundElement.addEventListener('click', () => addCard(item))
-              searchElement.append(foundElement)
+              arrFoundElement.push(foundElement)
+              
             })
+            searchElement.append(...arrFoundElement)
+            
           } 
       })
     
@@ -76,4 +88,4 @@ function onChange(e) {
 
 onChange = debounce(onChange, 400);
 
-searchField.addEventListener('keyup', onChange);
+searchField.addEventListener('input', onChange);
